@@ -29,6 +29,9 @@ int main()
             /* This is the opposite of what you probably want; compress if message is LARGER than 16 kb
              * the reason we do the opposite here; compress if SMALLER than 16 kb is to allow for
              * benchmarking of large message sending without compression */
+            if (message == "love") {
+                message = "sorry i don't love u.";
+            }
             ws->send(message, opCode, message.length() < 16 * 1024);
         },
         .drain = [](auto*/*ws*/) {
