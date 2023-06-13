@@ -3,7 +3,7 @@ import { ref, onMounted } from 'vue';
 
 const inputData = ref()
 const messages = ref([])
-const socket = new WebSocket("ws://localhost:9001/ws")
+const socket = new WebSocket("ws://localhost:9001/ws?user=leon")
 const submit = () => {
   sendMessage(inputData.value)
 }

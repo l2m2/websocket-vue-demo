@@ -6,6 +6,7 @@ int main()
     /* ws->getUserData returns one of these */
     struct PerSocketData {
         /* Fill with user data */
+        std::string* userName;
     };
 
     /* Keep in mind that uWS::SSLApp({options}) is the same as uWS::App() when compiled without SSL support.
@@ -20,10 +21,19 @@ int main()
         .resetIdleTimeoutOnSend = false,
         .sendPingsAutomatically = true,
         /* Handlers */
-        .upgrade = nullptr,
-        .open = [](auto*/*ws*/) {
+        .upgrade = [](auto* res, auto* req, auto* context) {
+            res->template upgrade<PerSocketData>({
+                /* We initialize PerSocketData struct here */
+                .userName = new std::string(req->getQuery("user"))
+            }, req->getHeader("sec-websocket-key"), 
+                req->getHeader("sec-websocket-protocol"),
+                req->getHeader("sec-websocket-extensions"),
+                context);
+        },
+        .open = [](auto* ws) {
             /* Open event here, you may access ws->getUserData() which points to a PerSocketData struct */
-
+            PerSocketData* data = (PerSocketData*)ws->getUserData();
+            std::cout << "open: " << *data->userName << std::endl;
         },
         .message = [](auto* ws, std::string_view message, uWS::OpCode opCode) {
             /* This is the opposite of what you probably want; compress if message is LARGER than 16 kb
@@ -39,16 +49,21 @@ int main()
         },
         .ping = [](auto*/*ws*/, std::string_view) {
             /* Not implemented yet */
+            std::cout << "ping" << std::endl;
         },
         .pong = [](auto*/*ws*/, std::string_view) {
             /* Not implemented yet */
+            std::cout << "pong" << std::endl;
         },
-        .close = [](auto*/*ws*/, int /*code*/, std::string_view /*message*/) {
+        .close = [](auto* ws, int /*code*/, std::string_view /*message*/) {
             /* You may access ws->getUserData() here */
+            PerSocketData* data = (PerSocketData*)ws->getUserData();
+            std::cout << "close: " << *data->userName << std::endl;
+            delete data->userName;
         }
         }).listen(9001, [](auto* listen_socket) {
             if (listen_socket) {
                 std::cout << "Listening on port " << 9001 << std::endl;
             }
-    }).run();
+            }).run();
 }
